@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Records</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h2 {
+            color: #437e85;
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                flex-direction: row;
+                gap: 30px;
+            }
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .form-container {
+            width: 100%;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 500px;
+        }
+
+        @media (min-width: 992px) {
+            .form-container, .chart-container {
+                width: 50%;
+            }
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .panel-header i {
+            font-size: 24px;
+            color: #437e85;
+            margin-right: 10px;
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            color: #437e85;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #437e85;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: #437e85;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 126, 133, 0.2);
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 12px;
+            top: 40px;
+            color: #437e85;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-buttons, .control-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        button i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .save-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .add-btn {
+            background: #437e85;
+            color: white;
+        }
+
+        .add-btn:hover {
+            background: #346166;
+        }
+
+        .edit-btn {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .edit-btn:hover {
+            background: #e0a800;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            width: 200px;
+            margin: 0 auto 30px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        .records-container {
+            margin-top: 30px;
+            max-width: 1150px; /* ปรับความกว้างตามที่คุณต้องการ */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+
+        .records-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .records-header i {
+            margin-right: 10px;
+            color: #437e85;
+            font-size: 20px;
+        }
+
+        .records-title {
+            font-size: 1.2em;
+            color: #437e85;
+            margin: 0;
+        }
+
+        .records-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+
+        .records-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .records-list::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .records-list::-webkit-scrollbar-thumb {
+            background-color: #437e85;
+            border-radius: 8px;
+        }
+
+        .record-item {
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: white;
+        transition: background 0.3s, transform 0.2s;
+        cursor: pointer;
+    }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-item:hover {
+        background: #e9ecef;
+        transform: scale(1.02);
+    }
+
+    .record-item.selected {
+        background: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+    .record-data {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 0;
+        font-size: 14px;
+    }
+
+        .record-data strong {
+            color: #437e85;
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .patient-name {
+            font-weight: bold;
+            color: #dc3545;
+        }
+
+        .form-disabled {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .form-enabled {
+            animation: highlight 1s ease;
+        }
+
+        @keyframes highlight {
+            0% { background-color: rgba(67, 126, 133, 0.1); }
+            100% { background-color: transparent; }
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+        .main-container {
+            flex-direction: column;
+        }
+    }
+    </style>
+</head>
+<body>
+    <h2>
+        <i class="fas fa-notes-medical"></i>
+        ข้อมูลสุขภาพของ <span id="patientNameDisplay" class="patient-name"></span>
+    </h2>
+    
+    <div class="container">
+        <!-- ฟอร์มบันทึกข้อมูลสุขภาพ -->
+        <div class="form-container panel">
+            <div class="panel-header">
+                <i class="fas fa-clipboard-list"></i>
+                <h3 class="panel-title">บันทึกข้อมูลสุขภาพ</h3>
+            </div>
+    
+            <div id="formFields">
+                <div class="form-group">
+                    <label for="recordDate">วันที่บันทึก:</label>
+                    <i class="far fa-calendar-alt"></i>
+                    <input type="date" id="recordDate">
+                </div>
+    
+                <div class="form-group">
+                    <label for="bloodSugar">ระดับน้ำตาลในเลือด (mg/dL):</label>
+                    <i class="fas fa-tint"></i>
+                    <input type="number" id="bloodSugar" placeholder="กรอกระดับน้ำตาลในเลือด">
+                </div>
+    
+                <div class="form-group">
+                    <label for="bloodPressure">ความดันโลหิต (mmHg):</label>
+                    <i class="fas fa-heart"></i>
+                    <input type="text" id="bloodPressure" placeholder="เช่น 120/80">
+                </div>
+    
+                <div class="form-group">
+                    <label for="cholesterol">คอเลสเตอรอล (mg/dL):</label>
+                    <i class="fas fa-flask"></i>
+                    <input type="number" id="cholesterol" placeholder="กรอกระดับคอเลสเตอรอล">
+                </div>
+            </div>
+    
+            <div class="button-container">
+                <div class="action-buttons">
+                    <button class="add-btn" onclick="addRecord()">
+                        <i class="fas fa-plus-circle"></i> เพิ่มใหม่
+                    </button>
+                    <button class="edit-btn" onclick="editRecord()">
+                        <i class="fas fa-edit"></i> แก้ไข
+                    </button>
+                </div>
+                <div class="control-buttons">
+                    <button class="save-btn" onclick="saveRecord()">
+                        <i class="fas fa-save"></i> บันทึก
+                    </button>
+                    <button class="delete-btn" onclick="deleteRecord()">
+                        <i class="fas fa-trash-alt"></i> ลบ
+                    </button>
+                </div>
+            </div>
+    
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    
+        <!-- กราฟ (ถ้ามี) -->
+        <div class="chart-container panel">
+            <div class="panel-header">
+                <i class="fas fa-chart-bar"></i>
+                <h3 class="panel-title">แผนภูมิสถิติสุขภาพ</h3>
+            </div>
+            <canvas id="healthChart"></canvas>
+            <div class="chart-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(220, 53, 69, 0.6);"></div>
+                    <span>น้ำตาลในเลือด</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(0, 123, 255, 0.6);"></div>
+                    <span>ความดันโลหิต</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: rgba(40, 167, 69, 0.6);"></div>
+                    <span>คอเลสเตอรอล</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- แยกส่วนประวัติการบันทึกออกมาเป็นส่วนแยกต่างหาก -->
+    <div class="records-container panel">
+        <div class="records-header">
+            <i class="fas fa-history"></i>
+            <h4 class="records-title">ประวัติการบันทึก</h4>
+        </div>
+        <div class="records-list" id="recordsList">
+            <!-- รายการบันทึกจะถูกเพิ่มโดย JavaScript -->
+        </div>
+    </div>
+    
+    <button class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> กลับไปหน้ารายชื่อผู้ป่วย
+    </button>
+
+    <script>
+        // รับค่าพารามิเตอร์จาก URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientId = urlParams.get('patientId');
+        const patientName = urlParams.get('patientName') || 'ไม่พบชื่อ';
+        
+        // แสดงชื่อผู้ป่วย
+        document.getElementById('patientNameDisplay').textContent = patientName;
+        
+        // สร้างตัวแปรเก็บข้อมูลและ ID ของบันทึกปัจจุบัน
+        let healthData = [];
+        let currentRecordId = null;
+        let isEditMode = false;
+    
+        // ตั้งค่า Chart
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        const healthChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'ระดับน้ำตาลในเลือด',
+                    data: [],
+                    backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                    borderColor: '#dc3545',
+                    borderWidth: 1
+                }, {
+                    label: 'ความดันโลหิต (Systolic)',
+                    data: [],
+                    backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                    borderColor: '#007bff',
+                    borderWidth: 1
+                }, {
+                    label: 'คอเลสเตอรอล',
+                    data: [],
+                    backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                    borderColor: '#28a745',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 14
+                        },
+                        padding: 10,
+                        cornerRadius: 6,
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                return tooltipItems[0].label;
+                            }
+                        }
+                    }
+                },
+                barPercentage: 0.8,
+                categoryPercentage: 0.9
+            }
+        });
+    
+        // แสดงข้อความแจ้งเตือน
+        function showMessage(message, isError = false) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + (isError ? 'error' : 'success');
+            statusMessage.style.display = 'block';
+            
+            // เลื่อนไปที่ข้อความแจ้งเตือน
+            statusMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            setTimeout(() => {
+                statusMessage.style.opacity = '0';
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                    statusMessage.style.opacity = '1';
+                }, 300);
+            }, 3000);
+        }
+        
+        // ฟังก์ชันดึงข้อมูลสุขภาพจาก API
+        function fetchHealthRecords() {
+            // แสดงสถานะกำลังโหลด
+            document.getElementById('formFields').classList.add('form-disabled');
+            
+            fetch(`http://127.0.0.1:3000/getHealthRecordsByPatient/${patientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    healthData = data;
+                    document.getElementById('formFields').classList.remove('form-disabled');
+                    updateChart();
+                    updateRecordsList();
+                    
+                    if (healthData.length > 0) {
+                        displayRecord(healthData[0]); // แสดงข้อมูลล่าสุด
+                    } else {
+                        addRecord(); // เตรียมฟอร์มว่างสำหรับเพิ่มข้อมูลใหม่
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('formFields').classList.remove('form-disabled');
+                    console.error('Error fetching health records:', error);
+                    showMessage('ไม่สามารถดึงข้อมูลสุขภาพได้', true);
+                });
+        }
+        
+        // อัปเดตรายการบันทึกในรายการ
+        function updateRecordsList() {
+            const recordsList = document.getElementById('recordsList');
+            recordsList.innerHTML = '';
+            
+            if (healthData.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'record-item';
+                emptyMessage.textContent = 'ไม่พบข้อมูลบันทึก';
+                emptyMessage.style.textAlign = 'center';
+                emptyMessage.style.fontStyle = 'italic';
+                emptyMessage.style.color = '#777';
+                recordsList.appendChild(emptyMessage);
+                return;
+            }
+            
+            // เรียงข้อมูลตามวันที่ (ล่าสุดอยู่บนสุด)
+            const sortedData = [...healthData].sort((a, b) => new Date(b.RecordDate) - new Date(a.RecordDate));
+            
+            sortedData.forEach(record => {
+                const recordItem = document.createElement('div');
+                recordItem.className = 'record-item';
+                if (record.RecordID === currentRecordId) {
+                    recordItem.classList.add('selected');
+                }
+                
+                const recordDate = new Date(record.RecordDate).toLocaleDateString('th-TH');
+                
+                recordItem.innerHTML = `
+                    <div class="record-data"><strong>วันที่:</strong> ${recordDate}</div>
+                    <div class="record-data"><strong>น้ำตาล:</strong> ${record.BloodSugarLevel} mg/dL</div>
+                    <div class="record-data"><strong>ความดัน:</strong> ${record.BloodPressure} mmHg</div>
+                    <div class="record-data"><strong>คอเลสเตอรอล:</strong> ${record.Cholesterol} mg/dL</div>
+                `;
+                
+                recordItem.addEventListener('click', () => {
+                    // เมื่อคลิกที่รายการบันทึก
+                    document.querySelectorAll('.record-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    recordItem.classList.add('selected');
+                    displayRecord(record);
+                    isEditMode = false;
+                });
+                
+                recordsList.appendChild(recordItem);
+            });
+        }
+        
+        // แสดงข้อมูลบันทึกในฟอร์ม
+        function displayRecord(record) {
+            currentRecordId = record.RecordID;
+            document.getElementById('recordDate').value = record.RecordDate.split('T')[0];
+            document.getElementById('bloodSugar').value = record.BloodSugarLevel;
+            document.getElementById('bloodPressure').value = record.BloodPressure;
+            document.getElementById('cholesterol').value = record.Cholesterol;
+            
+            // ตั้งค่าให้ฟอร์มเป็น readonly เมื่อเลือกรายการแต่ยังไม่ได้กดแก้ไข
+            toggleFormReadOnly(true);
+        }
+        
+        // เปิด/ปิด โหมดแก้ไขสำหรับฟอร์ม
+        function toggleFormReadOnly(isReadOnly) {
+            const inputs = document.querySelectorAll('#formFields input');
+            inputs.forEach(input => {
+                input.readOnly = isReadOnly;
+                if (isReadOnly) {
+                    input.style.backgroundColor = '#f8f9fa';
+                    input.style.cursor = 'default';
+                } else {
+                    input.style.backgroundColor = 'white';
+                    input.style.cursor = 'text';
+                }
+            });
+            
+            if (!isReadOnly) {
+                document.getElementById('formFields').classList.add('form-enabled');
+                setTimeout(() => {
+                    document.getElementById('formFields').classList.remove('form-enabled');
+                }, 1000);
+            }
+        }
+    
+        // เตรียมฟอร์มสำหรับเพิ่มข้อมูลใหม่
+        function addRecord() {
+            currentRecordId = null;
+            document.getElementById('recordDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('bloodSugar').value = '';
+            document.getElementById('bloodPressure').value = '';
+            document.getElementById('cholesterol').value = '';
+            showMessage('เตรียมพร้อมเพิ่มข้อมูลใหม่');
+            
+            // เปิดฟอร์มให้แก้ไขได้
+            toggleFormReadOnly(false);
+            isEditMode = true;
+            
+            // ยกเลิกการเลือกรายการในลิสต์
+            document.querySelectorAll('.record-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // โฟกัสที่ฟิลด์แรก
+            document.getElementById('recordDate').focus();
+        }
+        
+        // เปิดโหมดแก้ไขข้อมูล
+        function editRecord() {
+            if (!currentRecordId) {
+                showMessage('กรุณาเลือกข้อมูลที่ต้องการแก้ไข', true);
+                return;
+            }
+            
+            toggleFormReadOnly(false);
+            isEditMode = true;
+            showMessage('กำลังแก้ไขข้อมูล');
+        }
+    
+        // บันทึกข้อมูลสุขภาพ
+        function saveRecord() {
+            if (!isEditMode) {
+                showMessage('กรุณากดปุ่มแก้ไขหรือเพิ่มใหม่ก่อนบันทึก', true);
+                return;
+            }
+            
+            const recordDate = document.getElementById('recordDate').value;
+            const bloodSugar = document.getElementById('bloodSugar').value;
+            const bloodPressure = document.getElementById('bloodPressure').value;
+            const cholesterol = document.getElementById('cholesterol').value;
+    
+            if (!recordDate || !bloodSugar || !bloodPressure || !cholesterol) {
+                showMessage('กรุณากรอกข้อมูลให้ครบทุกช่อง', true);
+                return;
+            }
+            
+            // ตรวจสอบรูปแบบความดันโลหิต
+            const bpRegex = /^\d+\/\d+$/;
+            if (!bpRegex.test(bloodPressure)) {
+                showMessage('กรุณาใส่ความดันโลหิตในรูปแบบ Systolic/Diastolic เช่น 120/80', true);
+                return;
+            }
+            
+            // แสดงสถานะกำลังบันทึก
+            document.getElementById('formFields').classList.add('form-disabled');
+            showMessage('กำลังบันทึกข้อมูล...');
+            
+            const healthRecord = {
+                PatientID: patientId,
+                RecordDate: recordDate,
+                BloodSugarLevel: bloodSugar,
+                BloodPressure: bloodPressure,
+                Cholesterol: cholesterol
+            };
+            
+            const url = currentRecordId ? 
+                `http://127.0.0.1:3000/editHealthRecord/${currentRecordId}` : 
+                'http://127.0.0.1:3000/addHealthRecord';
+            
+            const method = currentRecordId ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(healthRecord)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('formFields').classList.remove('form-disabled');
+                if (!data.error) {
+                    showMessage(data.message);
+                    isEditMode = false;
+                    toggleFormReadOnly(true);
+                    fetchHealthRecords(); // โหลดข้อมูลใหม่
+                } else {
+                    showMessage(data.message, true);
+                }
+            })
+            .catch(error => {
+                document.getElementById('formFields').classList.remove('form-disabled');
+                console.error('Error saving record:', error);
+                showMessage('เกิดข้อผิดพลาดในการบันทึกข้อมูล', true);
+            });
+        }
+    
+        // ลบข้อมูลสุขภาพ
+        function deleteRecord() {
+            if (!currentRecordId) {
+                showMessage('กรุณาเลือกข้อมูลที่ต้องการลบ', true);
+                return;
+            }
+            
+            const confirmation = confirm('คุณแน่ใจหรือไม่ที่จะลบข้อมูลนี้?');
+            if (confirmation) {
+                // แสดงสถานะกำลังลบ
+                document.getElementById('formFields').classList.add('form-disabled');
+                showMessage('กำลังลบข้อมูล...');
+                
+                fetch(`http://127.0.0.1:3000/deleteHealthRecord/${currentRecordId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('formFields').classList.remove('form-disabled');
+                    if (!data.error) {
+                        showMessage(data.message);
+                        fetchHealthRecords(); // โหลดข้อมูลใหม่
+                    } else {
+                        showMessage(data.message, true);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('formFields').classList.remove('form-disabled');
+                    console.error('Error deleting record:', error);
+                    showMessage('เกิดข้อผิดพลาดในการลบข้อมูล', true);
+                });
+            }
+        }
+    
+        // อัปเดตข้อมูลกราฟ
+        function updateChart() {
+            if (healthData.length === 0) {
+                return;
+            }
+            
+            // เรียงข้อมูลตามวันที่
+            const sortedData = [...healthData].sort((a, b) => new Date(a.RecordDate) - new Date(b.RecordDate));
+            
+            const dates = sortedData.map(record => {
+                const date = new Date(record.RecordDate);
+                return date.toLocaleDateString('th-TH');
+            });
+            
+            const bloodSugarData = sortedData.map(record => record.BloodSugarLevel);
+            const bloodPressureData = sortedData.map(record => {
+                // แยกค่าความดันโลหิต (เช่น "120/80" -> 120)
+                const bpParts = record.BloodPressure.split('/');
+                return bpParts.length > 0 ? parseInt(bpParts[0]) : 0;
+            });
+            const cholesterolData = sortedData.map(record => record.Cholesterol);
+    
+            healthChart.data.labels = dates;
+            healthChart.data.datasets[0].data = bloodSugarData;
+            healthChart.data.datasets[1].data = bloodPressureData;
+            healthChart.data.datasets[2].data = cholesterolData;
+            healthChart.update();
+        }
+        
+        // ฟังก์ชันกลับไปหน้ารายชื่อผู้ป่วย
+        function goBack() {
+            window.location.href = 'patient.html';
+        }
+    
+        // โหลดข้อมูลเมื่อเปิดหน้า
+        fetchHealthRecords();
+    </script>
+    
+</body>
+</html>
